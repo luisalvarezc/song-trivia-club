@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Song Trivia & English Club Companion</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen py-8 px-4">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header y Selector de Canciones -->
+    <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-indigo-900 flex items-center gap-2">
+            🎵 English Conversation Club: Song Trivia
+          </h1>
+          <p class="text-slate-600 text-sm mt-1">
+            Herramienta conversacional B1-B2 con soporte de importación/exportación JSON.
+          </p>
+        </div>
+
+        <!-- Acciones de Importar / Exportar -->
+        <div class="flex items-center gap-2">
+          <button type="button" id="btnOpenImport" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5">
+            📥 Importar Canción
+          </button>
+          <button type="button" id="btnExportCurrent" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5">
+            📤 Exportar Actual
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Botones Rápidos (Presets e Importadas) -->
+      <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2" id="presetButtonsBar">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Canciones:</span>
+        <button type="button" data-song="rain" class="preset-btn px-3 py-1.5 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-200 hover:bg-indigo-100 transition">
+          🌧️ Rod Stewart / CCR
+        </button>
+        <button type="button" data-song="chicago" class="preset-btn px-3 py-1.5 bg-slate-100 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 hover:bg-indigo-50 hover:text-indigo-700 transition">
+          🎺 Chicago
+        </button>
+        <button type="button" data-song="shape" class="preset-btn px-3 py-1.5 bg-slate-100 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 hover:bg-indigo-50 hover:text-indigo-700 transition">
+          🎸 Ed Sheeran
+        </button>
+        <button type="button" data-song="police" class="preset-btn px-3 py-1.5 bg-slate-100 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 hover:bg-indigo-50 hover:text-indigo-700 transition">
+          🕵️ The Police
+        </button>
+        <button type="button" data-song="styles" class="preset-btn px-3 py-1.5 bg-slate-100 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 hover:bg-indigo-50 hover:text-indigo-700 transition">
+          🍉 Harry Styles
+        </button>
+        <button type="button" data-song="flowers" class="preset-btn px-3 py-1.5 bg-slate-100 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 hover:bg-indigo-50 hover:text-indigo-700 transition">
+          💐 Miley Cyrus
+        </button>
+        <button type="button" data-song="bohemian" class="preset-btn px-3 py-1.5 bg-slate-100 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 hover:bg-indigo-50 hover:text-indigo-700 transition">
+          👑 Queen
+        </button>
+      </div>
+    </header>
+
+    <!-- Ficha Principal de la Canción -->
+    <div id="resultSection" class="space-y-6">
+      
+      <!-- Banner Cabecera -->
+      <div class="bg-gradient-to-r from-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span class="inline-block px-2.5 py-0.5 bg-indigo-500/30 border border-indigo-400/40 rounded-full text-xs font-medium text-indigo-200 mb-2" id="resGenre">
+              Género
+            </span>
+            <h2 class="text-3xl font-extrabold tracking-tight" id="resTitle">Título</h2>
+            <p class="text-indigo-200 text-lg font-medium mt-1" id="resArtist">Artista</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-indigo-300 uppercase tracking-widest font-semibold block">Lanzamiento</span>
+            <span class="text-2xl font-black text-amber-400" id="resYear">Año</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Columna Izquierda: Pistas Progresivas -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                🧩 Pistas para Adivinar
+              </h3>
+              <button type="button" id="btnRevealAll" class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-100 font-semibold transition">
+                Mostrar todas
+              </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">
+              Lee una pista a la vez en inglés al grupo. Haz clic en "Revelar" para mostrarla.
+            </p>
+            <div class="space-y-3" id="resCluesContainer"></div>
+          </div>
+
+          <!-- Chuleta de Moderación -->
+          <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 shadow-sm">
+            <h4 class="font-bold text-indigo-950 text-xs mb-2 uppercase tracking-wide">
+              💬 Frases útiles para tu turno
+            </h4>
+            <ul class="text-xs text-indigo-900 space-y-1.5">
+              <li>• <em>"Here is my first clue. Any guesses so far?"</em></li>
+              <li>• <em>"Not quite, but you have the right musical era!"</em></li>
+              <li>• <em>"Warm, very warm! Think about the lyrics."</em></li>
+              <li>• <em>"Spot on! You nailed it."</em></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: 5 Datos y Preguntas de Debate -->
+        <div class="lg:col-span-7 space-y-6">
+
+          <!-- 5 Datos Clave -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 mb-4">
+              💡 5 Datos Interesantes (Key Facts)
+            </h3>
+            <div class="space-y-4" id="resFactsContainer"></div>
+          </div>
+
+          <!-- Preguntas de Conversación -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 mb-2">
+              🎙️ Speaking Prompts (Preguntas para el grupo)
+            </h3>
+            <p class="text-xs text-slate-500 mb-3">
+              Preguntas para comentar en inglés tras adivinar la canción:
+            </p>
+            <div class="space-y-2.5" id="resQuestionsContainer"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Modal de Importación -->
+  <div id="importModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-900">📥 Importar Canción desde JSON</h3>
+        <button type="button" id="btnCloseImport" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Pega a continuación el código JSON generado por el asistente para la nueva canción. La aplicación la validará y la añadirá a tu barra superior.
+      </p>
+      <textarea id="importJsonTextarea" rows="10" placeholder='{\n  "title": "Song Title",\n  "artist": "Artist Name",\n  ...\n}' 
+                class="w-full text-xs font-mono p-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"></textarea>
+      <div id="importErrorMsg" class="hidden text-xs text-red-600 font-semibold bg-red-50 p-2.5 rounded-lg border border-red-200"></div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" id="btnCancelImport" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition">
+          Cancelar
+        </button>
+        <button type="button" id="btnConfirmImport" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-sm">
+          Importar y Cargar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSongKey = 'rain';
+
+    const DEFAULT_SONGS = {
+      rain: {
+        title: "Have You Ever Seen the Rain",
+        artist: "Creedence Clearwater Revival / Rod Stewart",
+        genre: "Roots Rock / Acoustic Pop",
+        year: "1970 (CCR) / 2006 (Stewart)",
+        facts: [
+          { badge: "Tema/Letra", title: "Tristeza en el pico del éxito", english: "John Fogerty wrote this song as an emotional reflection on internal tension and sadness within the band, even while they were reaching the peak of global fame.", spanish: "Trata sobre la tristeza y tensión interna del grupo en pleno auge de su éxito." },
+          { badge: "Rankings", title: "Top 10 y álbum #1", english: "The original single reached #8 on the US Billboard Hot 100 in 1971, while Rod Stewart's 2006 cover helped push his album to #1 on the Billboard 200.", spanish: "Top 10 en 1971 y el disco cover de Rod Stewart debutó #1 en Billboard 200." },
+          { badge: "Autor", title: "El motor de Creedence", english: "John Fogerty was the creative engine and lead vocalist of CCR; he wrote almost all of the band's signature hits in a span of just three years.", spanish: "Fogerty compuso prácticamente todos los éxitos de la banda en solo 3 años." },
+          { badge: "Grabación", title: "Simplicidad de 4 acordes", english: "The track relies on a remarkably simple acoustic chord progression (C, G, Am, F) combined with a distinctive Hammond organ texture.", spanish: "Usa una progresión elemental de 4 acordes combinada con órgano Hammond." },
+          { badge: "Impacto", title: "Himno antibélico adoptado", english: "Despite Fogerty's personal meaning, many listeners in the 1970s interpreted the metaphor of rain on a sunny day as a reference to falling bombs during the Vietnam War.", spanish: "El público de los 70 la adoptó como metáfora de los bombardeos en Vietnam." }
+        ],
+        clues: [
+          { level: "Pista 1 (General)", english: "This track was originally written by an American roots-rock band in 1970, but it also has a famous acoustic cover by a British singer with a raspy voice.", spanish: "Banda estadounidense de 1970 con famoso cover británico." },
+          { level: "Pista 2 (Metáfora)", english: "The title uses an unusual weather situation as a metaphor for feeling down even when everything looks bright around you.", spanish: "Metáfora meteorológica sobre tristeza en días alegres." },
+          { level: "Pista 3 (Compositor)", english: "The original songwriter is John Fogerty, and the band's name starts with Creedence.", spanish: "Compositor John Fogerty." },
+          { level: "Pista 4 (Línea clave)", english: "A key question in the chorus asks: 'I want to know, have you ever seen the rain coming down on a sunny day?'", spanish: "Línea directa del coro." }
+        ],
+        questions: [
+          "Do you prefer the raw, acoustic sound of Creedence or Rod Stewart's gravelly vocal style?",
+          "What does the phrase 'rain on a sunny day' mean to you in everyday life?"
+        ]
+      },
+
+      chicago: {
+        title: "Hard to Say I'm Sorry",
+        artist: "Chicago (Lead Vocal: Peter Cetera)",
+        genre: "Soft Rock / Power Ballad",
+        year: "1982",
+        facts: [
+          { badge: "Tema/Letra", title: "Pedir perdón en pareja", english: "The narrator expresses regret after hurting a partner, pleading for another chance while admitting that pride makes apologizing extremely hard.", spanish: "Trata sobre la dificultad y el orgullo al momento de pedir perdón en pareja." },
+          { badge: "Rankings", title: "Número 1 de Billboard", english: "It reached #1 on the Billboard Hot 100 in September 1982, staying at the top for two weeks and revitalizing the band's career.", spanish: "Fue número 1 en el Billboard Hot 100 durante dos semanas en 1982." },
+          { badge: "Voz principal", title: "El tenor de Peter Cetera", english: "Sung by bassist Peter Cetera, whose high tenor voice defined Chicago's biggest radio ballads throughout the 1980s.", spanish: "Interpretada por Peter Cetera, cuya voz definió las baladas de la banda en los 80." },
+          { badge: "Producción", title: "La mano de David Foster", english: "Legendary producer David Foster co-wrote and produced the track, deliberately shifting the band from horn-heavy jazz rock to polished radio ballads.", spanish: "Producida por David Foster para llevar a la banda del jazz-rock al pop balada." },
+          { badge: "Grabación", title: "Suite de dos partes", english: "On the album Chicago 16, the gentle ballad flows seamlessly into an energetic, horn-driven second movement titled 'Get Away'.", spanish: "En el disco se conecta sin interrupción con una segunda parte movida (Get Away)." }
+        ],
+        clues: [
+          { level: "Pista 1 (General)", english: "This is an early 1980s soft-rock power ballad recorded by an American band named after a major city in Illinois.", spanish: "Banda con nombre de ciudad de Illinois." },
+          { level: "Pista 2 (Estilo)", english: "Although this band was famous for brass instruments like trumpets and trombones, this specific hit is built around an emotional piano melody.", spanish: "Famosos por trompetas, pero este tema es en piano." },
+          { level: "Pista 3 (Tema)", english: "The title describes how difficult it is to offer a sincere apology to someone you truly love.", spanish: "Trata sobre lo difícil que es disculparse." },
+          { level: "Pista 4 (Línea clave)", english: "A famous line in the chorus promises: 'After all that we've been through, I will make it up to you, I promise to...'", spanish: "Frase central del coro." }
+        ],
+        questions: [
+          "Why is it so difficult for most people to say 'I'm sorry' during an argument?",
+          "Do you enjoy 80s synthesizer power ballads, or do they sound a bit outdated to you?"
+        ]
+      },
+
+      shape: {
+        title: "Shape of You",
+        artist: "Ed Sheeran",
+        genre: "Pop / Dancehall Pop",
+        year: "2017",
+        facts: [
+          { badge: "Tema/Letra", title: "Química y romance en un bar", english: "The song narrates meeting someone at a bar instead of a club, focusing on magnetic physical chemistry and building a new romance.", spanish: "Narra un encuentro en un bar y la atracción física al iniciar un romance." },
+          { badge: "Rankings", title: "Récord histórico de streaming", english: "It spent 12 non-consecutive weeks at #1 on the Billboard Hot 100 and became one of the most-streamed tracks in Spotify history.", spanish: "12 semanas en el #1 de Billboard y récord histórico de reproducciones en Spotify." },
+          { badge: "Composición", title: "Escrita para Rihanna", english: "Sheeran originally conceived the track intending to pitch it to Rihanna or Little Mix before his producer persuaded him to keep it for himself.", spanish: "Originalmente la escribió pensando en ofrecérsela a Rihanna." },
+          { badge: "Instrumentación", title: "Loop de marimba", english: "It is built around a simple marimba-like rhythmic loop that gives the track its distinctive tropical pop vibe.", spanish: "Su base rítmica característica está construida con un loop de marimba." },
+          { badge: "Créditos", title: "Homenaje a TLC", english: "Sheeran later credited the writers of TLC's 90s hit 'No Scrubs' because listeners noticed similarities in the rhythmic cadence.", spanish: "Agregó a los autores de No Scrubs (TLC) en los créditos por similitud rítmica." }
+        ],
+        clues: [
+          { level: "Pista 1 (General)", english: "This is a 2017 dancehall-infused pop song by a British singer-songwriter known for performing live with just an acoustic guitar and a loop pedal.", spanish: "Cantautor británico con guitarra y pedal de loop." },
+          { level: "Pista 2 (Sonido)", english: "The track kicks off with an instantly recognizable wooden percussion riff played on a marimba synth.", spanish: "Inicia con un riff muy pegajoso de marimba." },
+          { level: "Pista 3 (Lugar)", english: "The first line explains that the club is not the best place to find a lover, so the narrator goes to a bar instead.", spanish: "Dice que el club no es buen lugar para buscar pareja y va a un bar." },
+          { level: "Pista 4 (Línea clave)", english: "The chorus begins with the phrase: 'I'm in love with the shape of you, we push and pull like a magnet do...'", spanish: "Línea icónica del estribillo." }
+        ],
+        questions: [
+          "Why do you think simple, repetitive loops make pop songs become global earworms?",
+          "Do you prefer Ed Sheeran playing acoustic folk songs or uptempo radio pop?"
+        ]
+      },
+
+      police: {
+        title: "Every Breath You Take",
+        artist: "The Police",
+        genre: "New Wave / Post-Punk Pop",
+        year: "1983",
+        facts: [
+          { badge: "Tema/Letra", title: "Obsesión y vigilancia", english: "Many mistake it for a romantic love song, but Sting actually wrote it about obsession, surveillance, and possessiveness after a painful divorce.", spanish: "Aunque parece romántica, trata sobre vigilancia, celos y obsesión tras un divorcio." },
+          { badge: "Rankings", title: "8 semanas en el #1 y Grammys", english: "It topped the Billboard Hot 100 for eight weeks in 1983 and won two Grammy Awards, including Song of the Year.", spanish: "Pasó 8 semanas en el #1 de Billboard y ganó 2 premios Grammy." },
+          { badge: "Autor", title: "Escrita en la casa de James Bond", english: "Sting wrote the lyrics in Jamaica at GoldenEye, the historical estate where Ian Fleming wrote the James Bond novels.", spanish: "Sting escribió la letra en Jamaica, en la finca donde se creó James Bond." },
+          { badge: "Guitarra", title: "Arpegio en una sola toma", english: "Guitarist Andy Summers created the iconic clean, arpeggiated guitar pattern in a single take, giving the song its eerie, tense atmosphere.", spanish: "El famoso arpegio de guitarra lo grabó Andy Summers en una sola toma." },
+          { badge: "Legado", title: "Sample de Puff Daddy", english: "The track was famously sampled by Puff Daddy in 1997 for 'I'll Be Missing You', becoming a massive hip-hop tribute to The Notorious B.I.G.", spanish: "Fue la base del sample de I'll Be Missing You de Puff Daddy en 1997." }
+        ],
+        clues: [
+          { level: "Pista 1 (General)", english: "This is an iconic 1983 new wave track by a British rock trio fronted by a bassist and lead singer named Sting.", spanish: "Trío británico de new wave liderado por Sting." },
+          { level: "Pista 2 (Contraste)", english: "Couples often play this song at weddings believing it is romantic, even though the lyrics are actually about jealous surveillance and stalking.", spanish: "Se toca por error en bodas creyendo que es de amor." },
+          { level: "Pista 3 (Instrumental)", english: "The entire song is driven by a steady, hypnotic clean guitar arpeggio and a simple, repeating drum beat.", spanish: "Arpegio hipnótico y limpio de guitarra." },
+          { level: "Pista 4 (Línea clave)", english: "The main promise in the chorus warns: 'Every breath you take, and every move you make, I'll be watching you...'", spanish: "Estribillo célebre sobre vigilancia." }
+        ],
+        questions: [
+          "Have you ever discovered that a song you thought was sweet actually had dark or creepy lyrics?",
+          "Why do people often confuse possessive behavior with true romance in popular music?"
+        ]
+      },
+
+      styles: {
+        title: "Watermelon Sugar",
+        artist: "Harry Styles",
+        genre: "Funk Pop / Indie Pop",
+        year: "2019",
+        facts: [
+          { badge: "Tema/Letra", title: "Atracción veraniega y dulzura", english: "The track uses colorful fruit metaphors to describe the sweet, intoxicating initial rush of summer intimacy and mutual attraction.", spanish: "Metáforas frutales para describir la atracción y dulzura del verano." },
+          { badge: "Rankings", title: "Primer #1 en solitario y Grammy", english: "It became Styles' first solo #1 on the US Billboard Hot 100 and won the Grammy Award for Best Pop Solo Performance in 2021.", spanish: "Primer #1 de Harry Styles en Billboard Hot 100 y ganador del Grammy en 2021." },
+          { badge: "Título", title: "Inspirada en una novela", english: "Styles took the title from Richard Brautigan's 1968 post-apocalyptic novel titled 'In Watermelon Sugar'.", spanish: "El título viene de una novela de 1968 de Richard Brautigan." },
+          { badge: "Sonido", title: "Guitarras funk de los 70", english: "The track combines 1970s funk-pop guitars, brass instruments, and modern indie-pop production.", spanish: "Mezcla guitarras de funk-pop de los 70 con arreglos de viento y pop actual." },
+          { badge: "Impacto", title: "Escape veraniego en 2020", english: "Released as a single in 2020, its nostalgic beach music video provided listeners with escapist summer energy during global lockdowns.", spanish: "Su video veraniego sirvió como escape alegre durante los meses de confinamiento." }
+        ],
+        clues: [
+          { level: "Pista 1 (General)", english: "This vibrant retro-pop track was released in late 2019 by a British singer who was previously a member of the boy band One Direction.", spanish: "Exintegrante de One Direction con estilo retro." },
+          { level: "Pista 2 (Metáfora)", english: "The lyrics compare feeling joyful and connected in summer to tasting sweet, refreshing fruit.", spanish: "Compara la alegría veraniega con frutas dulces." },
+          { level: "Pista 3 (Sonido)", english: "It features sunny 70s-style electric guitars and horn accents that build up towards the outro.", spanish: "Guitarras setenteras y trompetas hacia el final." },
+          { level: "Pista 4 (Línea clave)", english: "The infectious hook repeats the phrase: 'Watermelon sugar high, watermelon sugar high...'", spanish: "Repetición directa del gancho vocal." }
+        ],
+        questions: [
+          "What is your favorite feel-good summer song in English that immediately lifts your mood?",
+          "How has Harry Styles managed to separate his solo image from his boy band past?"
+        ]
+      },
+
+      flowers: {
+        title: "Flowers",
+        artist: "Miley Cyrus",
+        genre: "Disco Pop / Funk Pop",
+        year: "2023",
+        facts: [
+          { badge: "Tema/Letra", title: "Amor propio e independencia", english: "A definitive modern anthem of self-reliance, independence, and healing, celebrating that you can love, validate, and treat yourself better than an ex-partner ever could.", spanish: "Himno de amor propio: demuestra que una mujer puede amarse y cuidarse mejor que una expareja." },
+          { badge: "Rankings", title: "Debut en el #1 y Grammys", english: "It debuted at #1 on the Billboard Hot 100, spent eight weeks at the top, and won Cyrus her first career Grammy Awards (including Record of the Year).", spanish: "Debutó #1 en Billboard y le dio a Cyrus sus primeros premios Grammy." },
+          { badge: "Referencia", title: "Respuesta a Bruno Mars", english: "The chorus interpolates and directly answers the lyrics of Bruno Mars' ballad 'When I Was Your Man', reversing the regretful male perspective into female self-love.", spanish: "Responde directamente al coro de When I Was Your Man de Bruno Mars desde el amor propio." },
+          { badge: "Producción", title: "Sonido disco al estilo 'I Will Survive'", english: "It combines a smooth 1970s disco-funk groove with modern pop rhythms, reminiscent of Gloria Gaynor's classic 'I Will Survive'.", spanish: "Ritmo disco-funk setentero en la línea del clásico I Will Survive." },
+          { badge: "Impacto", title: "Fenómeno viral de autocuidado", english: "The song became a worldwide phenomenon on social media, sparking viral conversations about prioritizing mental health and personal independence over toxic relationships.", spanish: "Fenómeno viral sobre independencia emocional y amor propio tras una ruptura." }
+        ],
+        clues: [
+          { level: "Pista 1 (General)", english: "This record-breaking pop track by an American singer and former Disney star became a global feminist anthem about self-love after a breakup.", spanish: "Estrella pop estadounidense, exactriz juvenil; himno de amor propio." },
+          { level: "Pista 2 (Conexión)", english: "The lyrics directly answer a famous Bruno Mars song where a man regrets not buying gifts or holding his partner's hand.", spanish: "Respuesta directa a una canción de Bruno Mars." },
+          { level: "Pista 3 (Acciones)", english: "The singer explains that she can take herself dancing, hold her own hand, and buy her own bouquet of plants.", spanish: "Afirma que puede comprarse sus propios ramos y sacarse a bailar." },
+          { level: "Pista 4 (Línea clave)", english: "The empowering chorus starts with: 'I can buy myself flowers, write my name in the sand...'", spanish: "Línea icónica de apertura del coro." }
+        ],
+        questions: [
+          "Why do songs about self-love and self-reliance resonate so strongly with modern audiences?",
+          "Do you think buying yourself gifts or taking yourself out on dates is an effective way to practice self-care?"
+        ]
+      },
+
+      bohemian: {
+        title: "Bohemian Rhapsody",
+        artist: "Queen (Freddie Mercury)",
+        genre: "Progressive Rock / Rhapsody",
+        year: "1975",
+        facts: [
+          { badge: "Estructura", title: "Sin coro tradicional", english: "It completely breaks the rules of conventional pop music by having no repeating chorus. Instead, it transitions smoothly through five distinct musical movements.", spanish: "Rompe el esquema estándar de la música popular al carecer de coro y pasar por cinco movimientos distintos." },
+          { badge: "Listas", title: "Número 1 en dos épocas", english: "It spent nine weeks at #1 in the UK in 1975, and topped the charts again in 1991 after Freddie Mercury passed away.", spanish: "Llegó al #1 durante 9 semanas en 1975 y repitió el #1 en 1991 tras la muerte de Mercury." },
+          { badge: "Grabación", title: "180 capas vocales", english: "Freddie, Brian May, and Roger Taylor sang their parts repeatedly to build massive operatic harmonies, running the tape so much that it turned transparent.", spanish: "Superpusieron hasta 180 pistas vocales; pasaron la cinta tantas veces que casi quedó transparente." },
+          { badge: "Anécdota", title: "Filtrada en la radio", english: "Executives insisted it was too long. The band gave a copy to radio host Kenny Everett, who secretly played it 14 times in one weekend, sparking huge demand.", spanish: "La disquera decía que era muy larga, pero un locutor amigo la puso 14 veces en un fin de semana y provocó furor." },
+          { badge: "Legado", title: "Pionera del videoclip", english: "The promotional video, filmed in just four hours for under 4,500 pounds, popularized using music videos to market singles worldwide.", spanish: "El video promocional de 1975 consolidó el formato de videoclip moderno en la industria." }
+        ],
+        clues: [
+          { level: "Pista 1 (General)", english: "This is a 1975 track by a British rock quartet that blends piano ballad elements, hard rock, and an entire operatic section.", spanish: "Combina balada de piano, rock pesado y una sección operística completa." },
+          { level: "Pista 2 (Estructura)", english: "Unlike almost every other commercial hit, this nearly six-minute song does not have a traditional chorus or recurring refrain.", spanish: "No tiene coro tradicional y dura casi 6 minutos." },
+          { level: "Pista 3 (Curiosidad)", english: "The record label originally refused to release it as a single, claiming no radio station would ever play a six-minute track.", spanish: "La disquera se negó al inicio porque pensaban que la radio no la programaría." },
+          { level: "Pista 4 (Línea clave)", english: "A famous line in the ballad begins: 'Mama, just killed a man, put a gun against his head...'", spanish: "Cita directa del estribillo inicial." }
+        ],
+        questions: [
+          "Do you think a complex six-minute song like this could still become a global #1 hit today?",
+          "What is your personal interpretation of the lyrics and Freddie's message?"
+        ]
+      }
+    };
+
+    // Colección activa (combina canciones por defecto + importadas en localStorage)
+    let activeSongs = { ...DEFAULT_SONGS };
+
+    function loadCustomSongsFromStorage() {
+      try {
+        const stored = localStorage.getItem('custom_imported_songs');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          activeSongs = { ...DEFAULT_SONGS, ...parsed };
+          renderAllPresetButtons();
+        }
+      } catch (e) {
+        console.error("Error al cargar canciones guardadas:", e);
+      }
+    }
+
+    function saveCustomSongToStorage(key, songData) {
+      try {
+        let stored = {};
+        const raw = localStorage.getItem('custom_imported_songs');
+        if (raw) stored = JSON.parse(raw);
+        stored[key] = songData;
+        localStorage.setItem('custom_imported_songs', JSON.stringify(stored));
+      } catch (e) {
+        console.error("Error al guardar canción:", e);
+      }
+    }
+
+    function renderAllPresetButtons() {
+      const container = document.getElementById('presetButtonsBar');
+      container.innerHTML = `<span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Canciones:</span>`;
+
+      Object.keys(activeSongs).forEach(key => {
+        const s = activeSongs[key];
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('data-song', key);
+        
+        const isCurrent = (key === currentSongKey);
+        btn.className = `preset-btn px-3 py-1.5 text-xs rounded-lg border transition ${
+          isCurrent 
+            ? 'bg-indigo-50 text-indigo-700 font-bold border-indigo-200' 
+            : 'bg-slate-100 text-slate-700 font-medium border-slate-300 hover:bg-indigo-50 hover:text-indigo-700'
+        }`;
+        
+        btn.textContent = `${s.title.length > 20 ? s.title.substring(0, 18) + '...' : s.title}`;
+        btn.addEventListener('click', () => switchSong(key));
+        container.appendChild(btn);
+      });
+    }
+
+    function switchSong(key) {
+      currentSongKey = key;
+      renderAllPresetButtons();
+      renderSong(key);
+    }
+
+    function renderSong(key) {
+      const data = activeSongs[key];
+      if (!data) return;
+
+      document.getElementById('resTitle').textContent = data.title;
+      document.getElementById('resArtist').textContent = data.artist;
+      document.getElementById('resGenre').textContent = data.genre;
+      document.getElementById('resYear').textContent = data.year;
+
+      // Pistas
+      const cluesContainer = document.getElementById('resCluesContainer');
+      cluesContainer.innerHTML = data.clues.map((clue, idx) => `
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">${clue.level}</span>
+            <button type="button" class="btn-toggle-clue text-xs px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 font-medium rounded border border-slate-300 transition" data-target="clue-text-${idx}">
+              Revelar
+            </button>
+          </div>
+          <p id="clue-text-${idx}" class="clue-content text-sm font-medium text-slate-900 hidden leading-relaxed select-all bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+            "${clue.english}"
+          </p>
+          <p class="text-xs text-slate-600 mt-1.5 italic">
+            💡 ${clue.spanish}
+          </p>
+        </div>
+      `).join('');
+
+      // 5 Datos
+      const factsContainer = document.getElementById('resFactsContainer');
+      factsContainer.innerHTML = data.facts.map((fact, idx) => `
+        <div class="border border-slate-100 rounded-xl p-4 bg-slate-50 hover:bg-white hover:border-slate-300 transition">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-800 text-xs flex items-center justify-center font-bold">${idx + 1}</span>
+              ${fact.title}
+            </h4>
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">${fact.badge}</span>
+          </div>
+          <p class="text-sm text-slate-800 font-medium leading-relaxed mt-2">
+            ${fact.english}
+          </p>
+          <p class="text-xs text-slate-600 mt-1 italic">
+            Traducción: ${fact.spanish}
+          </p>
+        </div>
+      `).join('');
+
+      // Preguntas
+      const questionsContainer = document.getElementById('resQuestionsContainer');
+      questionsContainer.innerHTML = data.questions.map((q, idx) => `
+        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+          <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded mt-0.5">Q${idx + 1}</span>
+          <p class="text-sm text-slate-800 font-medium leading-relaxed">"${q}"</p>
+        </div>
+      `).join('');
+
+      // Listeners de pistas
+      document.querySelectorAll('.btn-toggle-clue').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-target');
+          const textEl = document.getElementById(targetId);
+          if (textEl.classList.contains('hidden')) {
+            textEl.classList.remove('hidden');
+            btn.textContent = 'Ocultar';
+          } else {
+            textEl.classList.add('hidden');
+            btn.textContent = 'Revelar';
+          }
+        });
+      });
+    }
+
+    // Funciones del Modal de Importación
+    const modal = document.getElementById('importModal');
+    const textarea = document.getElementById('importJsonTextarea');
+    const errorMsg = document.getElementById('importErrorMsg');
+
+    document.getElementById('btnOpenImport').addEventListener('click', () => {
+      textarea.value = '';
+      errorMsg.classList.add('hidden');
+      modal.classList.remove('hidden');
+    });
+
+    const closeModal = () => modal.classList.add('hidden');
+    document.getElementById('btnCloseImport').addEventListener('click', closeModal);
+    document.getElementById('btnCancelImport').addEventListener('click', closeModal);
+
+    document.getElementById('btnConfirmImport').addEventListener('click', () => {
+      errorMsg.classList.add('hidden');
+      const text = textarea.value.trim();
+      if (!text) {
+        errorMsg.textContent = "Por favor pega el código JSON de la canción.";
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(text);
+
+        // Validación básica de campos requeridos
+        if (!parsed.title || !parsed.artist || !Array.isArray(parsed.facts) || !Array.isArray(parsed.clues)) {
+          throw new Error("El JSON no cumple con la estructura requerida (faltan title, artist, facts o clues).");
+        }
+
+        const songKey = 'custom_' + Date.now();
+        activeSongs[songKey] = parsed;
+        saveCustomSongToStorage(songKey, parsed);
+
+        switchSong(songKey);
+        closeModal();
+      } catch (err) {
+        errorMsg.textContent = "Error de formato: " + err.message;
+        errorMsg.classList.remove('hidden');
+      }
+    });
+
+    // Función de Exportación
+    document.getElementById('btnExportCurrent').addEventListener('click', () => {
+      const currentData = activeSongs[currentSongKey];
+      if (!currentData) return;
+
+      const jsonString = JSON.stringify(currentData, null, 2);
+      navigator.clipboard.writeText(jsonString).then(() => {
+        alert(`¡Estructura de "${currentData.title}" copiada al portapapeles en formato JSON!`);
+      }).catch(() => {
+        // Fallback si el portapapeles está bloqueado
+        prompt("Copia el código JSON:", jsonString);
+      });
+    });
+
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCustomSongsFromStorage();
+      renderAllPresetButtons();
+      renderSong(currentSongKey);
+
+      document.getElementById('btnRevealAll').addEventListener('click', () => {
+        document.querySelectorAll('.clue-content').forEach(el => el.classList.remove('hidden'));
+        document.querySelectorAll('.btn-toggle-clue').forEach(btn => btn.textContent = 'Ocultar');
+      });
+    });
+  </script>
+</body>
+</html>
